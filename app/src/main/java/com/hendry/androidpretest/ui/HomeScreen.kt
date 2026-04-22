@@ -1,5 +1,6 @@
 package com.hendry.androidpretest.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -8,10 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.hendry.androidpretest.R
 import com.hendry.androidpretest.data.TransactionRepository
 import com.hendry.androidpretest.model.Transaction
 import com.hendry.androidpretest.model.TransactionType
@@ -22,10 +25,10 @@ fun HomeScreen(
     onNavigateToTransfer: (TransactionType) -> Unit
 ) {
     val transactions by TransactionRepository.transactions.collectAsState()
+    val balance by TransactionRepository.balance.collectAsState()
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
             .padding(
                 top = 48.dp,
                 start = 16.dp,
@@ -34,12 +37,25 @@ fun HomeScreen(
             )
     ) {
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
         Text(
             text = "Rekap keuanganmu",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         )
+
+        Text(
+            text = formatRupiah(balance),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+    }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -54,7 +70,7 @@ fun HomeScreen(
 @Composable
 fun SummaryCard(transactions: List<Transaction>) {
 
-    var selectedFilter by remember { mutableStateOf("ALL") }
+    var selectedFilter by remember { mutableStateOf("EXPENSE") }
 
     val pemasukan = transactions
         .filter { it.type == TransactionType.TOPUP && it.status == "SUCCESS" }
@@ -153,20 +169,66 @@ fun SummaryCard(transactions: List<Transaction>) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    Column {
-                        Text(
-                            text = if (item.type == TransactionType.TRANSFER)
-                                "Uang Keluar"
-                            else "Uang Masuk"
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                        Text(formatRupiah(item.nominal))
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(
+                                    color = if (item.type == TransactionType.TRANSFER)
+                                        Color(0xFFFFEBEE) // merah soft
+                                    else
+                                        Color(0xFFE8F5E9), // hijau soft
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(
+                                    id = if (item.type == TransactionType.TRANSFER)
+                                        R.drawable.ic_money_out
+                                    else
+                                        R.drawable.ic_money_in
+                                ),
+                                contentDescription = null,
+                                tint = if (item.type == TransactionType.TRANSFER)
+                                    Color.Red
+                                else
+                                    Color(0xFF00C853),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Column {
+                            Text(
+                                text = if (item.type == TransactionType.TRANSFER)
+                                    "Uang Keluar"
+                                else "Uang Masuk",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            Text(
+                                text = formatRupiah(item.nominal),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
                     }
 
-                    Text(">")
+                    Icon(
+                        painter = painterResource(R.drawable.ic_right),
+                        contentDescription = "Detail",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
